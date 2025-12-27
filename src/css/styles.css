@@ -220,8 +220,8 @@ h6 {
 
 .skip-link:focus {
   top: var(--space-md);
-  outline: 2px solid var(--color-accent-500);
-  outline-offset: 2px;
+  outline: 3px solid var(--color-accent-500);
+  outline-offset: 3px;
 }
 
 /* ============================================
@@ -392,7 +392,7 @@ h6 {
 }
 
 .hero-cta-button:focus-visible {
-  outline: 2px solid var(--color-accent-500);
+  outline: 3px solid var(--color-accent-500);
   outline-offset: 4px;
 }
 
@@ -514,6 +514,14 @@ h6 {
 .about-benefits:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+}
+
+.about-mission:focus-within,
+.about-philosophy:focus-within,
+.about-history:focus-within,
+.about-benefits:focus-within {
+  outline: 3px solid var(--color-primary-500);
+  outline-offset: 4px;
 }
 
 .about-mission h3,
@@ -672,7 +680,7 @@ h6 {
 }
 
 .program-card:focus-within {
-  outline: 2px solid var(--color-primary-500);
+  outline: 3px solid var(--color-primary-500);
   outline-offset: 4px;
 }
 
@@ -855,8 +863,8 @@ h6 {
 }
 
 .contact-info-item a:focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
+  outline: 3px solid var(--color-primary-500);
+  outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
 
@@ -918,6 +926,12 @@ h6 {
   outline: none;
   border-color: var(--color-primary-500);
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.form-group input:focus-visible,
+.form-group textarea:focus-visible {
+  outline: 3px solid var(--color-primary-500);
+  outline-offset: 2px;
 }
 
 .form-group input[aria-invalid="true"],
@@ -993,7 +1007,7 @@ h6 {
 }
 
 .form-submit-button:focus-visible {
-  outline: 2px solid var(--color-accent-500);
+  outline: 3px solid var(--color-accent-500);
   outline-offset: 4px;
 }
 

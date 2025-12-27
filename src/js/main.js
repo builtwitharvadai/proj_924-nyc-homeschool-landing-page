@@ -9,10 +9,11 @@
  * - Program card interactions and keyboard navigation
  * - Contact form validation and submission handling
  * - Google Analytics 4 integration
+ * - Performance monitoring and optimization
  * 
- * @generated-from: task-id:TASK-002, task-id:735be9ca-de2a-4d3e-8d57-44ce50f6d27b, task-id:1bc3bb18-5c9a-4a4b-b31a-06119fdfedfe, task-id:43be3d0b-2e41-4124-8e7c-dc7e35364c64
- * @modifies: hero-section interactions, programs-section interactions, contact-form interactions, analytics tracking
- * @dependencies: [Google Analytics 4]
+ * @generated-from: task-id:TASK-002, task-id:735be9ca-de2a-4d3e-8d57-44ce50f6d27b, task-id:1bc3bb18-5c9a-4a4b-b31a-06119fdfedfe, task-id:43be3d0b-2e41-4124-8e7c-dc7e35364c64, task-id:f56120e7-fd00-4618-8b2b-e7175ce435e2
+ * @modifies: hero-section interactions, programs-section interactions, contact-form interactions, analytics tracking, performance optimization
+ * @dependencies: [Google Analytics 4, Intersection Observer API]
  */
 
 (function initializeHeroSection() {
@@ -33,6 +34,8 @@
     PROGRAM_CARD_ACTIVE_CLASS: 'program-card--active',
     FORM_SUBMIT_TIMEOUT_MS: 10000,
     GA_MEASUREMENT_ID: 'G-XXXXXXXXXX',
+    PERFORMANCE_MARK_PREFIX: 'nychomeschool',
+    IMAGE_LOADING_TIMEOUT_MS: 10000,
   });
 
   const SELECTORS = Object.freeze({
@@ -47,6 +50,7 @@
     FORM_GROUPS: '.form-group',
     FORM_SUBMIT_BUTTON: '.form-submit-button',
     FORM_ERROR: '.form-error',
+    LAZY_IMAGES: 'img[loading="lazy"]',
   });
 
   const ANALYTICS_EVENTS = Object.freeze({
@@ -63,6 +67,8 @@
     FORM_VALIDATION_ERROR: 'contact_form_validation_error',
     PAGE_ENGAGEMENT: 'page_engagement',
     SCROLL_DEPTH: 'scroll_depth',
+    PERFORMANCE_METRIC: 'performance_metric',
+    IMAGE_LOAD_ERROR: 'image_load_error',
   });
 
   const VALIDATION_PATTERNS = Object.freeze({
@@ -161,6 +167,174 @@
       return [];
     }
   }
+
+  // ============================================
+  // Performance Monitoring Module
+  // ============================================
+
+  const PerformanceMonitor = (function createPerformanceMonitorModule() {
+    const marks = new Map();
+    const measures = new Map();
+
+    /**
+     * Checks if Performance API is available
+     * @returns {boolean} True if Performance API is available
+     */
+    function isAvailable() {
+      return typeof window.performance !== 'undefined' &&
+             typeof window.performance.mark === 'function' &&
+             typeof window.performance.measure === 'function';
+    }
+
+    /**
+     * Creates a performance mark
+     * @param {string} name - Mark name
+     */
+    function mark(name) {
+      if (!isAvailable()) {
+        return;
+      }
+
+      try {
+        const markName = `${CONFIG.PERFORMANCE_MARK_PREFIX}:${name}`;
+        window.performance.mark(markName);
+        marks.set(name, markName);
+        log('info', `Performance mark created: ${name}`);
+      } catch (error) {
+        log('error', 'Failed to create performance mark', {
+          name,
+          error: error.message,
+        });
+      }
+    }
+
+    /**
+     * Measures performance between two marks
+     * @param {string} name - Measure name
+     * @param {string} startMark - Start mark name
+     * @param {string} endMark - End mark name (optional)
+     * @returns {number|null} Duration in milliseconds
+     */
+    function measure(name, startMark, endMark) {
+      if (!isAvailable()) {
+        return null;
+      }
+
+      try {
+        const measureName = `${CONFIG.PERFORMANCE_MARK_PREFIX}:${name}`;
+        const startMarkName = marks.get(startMark);
+        const endMarkName = endMark ? marks.get(endMark) : undefined;
+
+        if (!startMarkName) {
+          log('warn', `Start mark not found: ${startMark}`);
+          return null;
+        }
+
+        window.performance.measure(measureName, startMarkName, endMarkName);
+        const entry = window.performance.getEntriesByName(measureName)[0];
+        
+        if (entry) {
+          measures.set(name, entry.duration);
+          log('info', `Performance measured: ${name}`, {
+            duration: entry.duration,
+            startMark,
+            endMark,
+          });
+
+          // Track performance metric in analytics
+          Analytics.trackEvent(ANALYTICS_EVENTS.PERFORMANCE_METRIC, {
+            metric_name: name,
+            duration_ms: entry.duration,
+            start_mark: startMark,
+            end_mark: endMark,
+          });
+
+          return entry.duration;
+        }
+
+        return null;
+      } catch (error) {
+        log('error', 'Failed to measure performance', {
+          name,
+          startMark,
+          endMark,
+          error: error.message,
+        });
+        return null;
+      }
+    }
+
+    /**
+     * Gets Core Web Vitals metrics
+     * @returns {Object} Core Web Vitals data
+     */
+    function getCoreWebVitals() {
+      if (!isAvailable()) {
+        return {};
+      }
+
+      const vitals = {};
+
+      try {
+        // Get navigation timing
+        const navigation = window.performance.getEntriesByType('navigation')[0];
+        if (navigation) {
+          vitals.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart;
+          vitals.loadComplete = navigation.loadEventEnd - navigation.loadEventStart;
+          vitals.domInteractive = navigation.domInteractive - navigation.fetchStart;
+        }
+
+        // Get paint timing
+        const paintEntries = window.performance.getEntriesByType('paint');
+        paintEntries.forEach((entry) => {
+          if (entry.name === 'first-paint') {
+            vitals.firstPaint = entry.startTime;
+          } else if (entry.name === 'first-contentful-paint') {
+            vitals.firstContentfulPaint = entry.startTime;
+          }
+        });
+
+        log('info', 'Core Web Vitals collected', vitals);
+      } catch (error) {
+        log('error', 'Failed to collect Core Web Vitals', {
+          error: error.message,
+        });
+      }
+
+      return vitals;
+    }
+
+    /**
+     * Reports performance metrics
+     */
+    function reportMetrics() {
+      const vitals = getCoreWebVitals();
+      
+      if (Object.keys(vitals).length > 0) {
+        Analytics.trackEvent(ANALYTICS_EVENTS.PERFORMANCE_METRIC, {
+          metric_type: 'core_web_vitals',
+          ...vitals,
+        });
+      }
+
+      // Report custom measures
+      measures.forEach((duration, name) => {
+        Analytics.trackEvent(ANALYTICS_EVENTS.PERFORMANCE_METRIC, {
+          metric_type: 'custom_measure',
+          metric_name: name,
+          duration_ms: duration,
+        });
+      });
+    }
+
+    return Object.freeze({
+      mark,
+      measure,
+      getCoreWebVitals,
+      reportMetrics,
+      isAvailable,
+    });
+  })();
 
   // ============================================
   // Google Analytics 4 Module
@@ -541,12 +715,15 @@
 
   const LazyLoader = (function createLazyLoaderModule() {
     let observer = null;
+    const loadingImages = new Map();
 
     /**
-     * Loads the actual image source
+     * Loads the actual image source with timeout
      * @param {HTMLImageElement} imageElement - Image element to load
      */
     function loadImage(imageElement) {
+      PerformanceMonitor.mark(`image-load-start-${imageElement.className}`);
+
       const dataSrc = imageElement.getAttribute('data-src');
 
       if (!dataSrc) {
@@ -557,11 +734,29 @@
       }
 
       const img = new Image();
+      const timeoutId = setTimeout(() => {
+        log('error', 'Image load timeout', { src: dataSrc });
+        imageElement.classList.add('load-error');
+        
+        Analytics.trackEvent(ANALYTICS_EVENTS.IMAGE_LOAD_ERROR, {
+          src: dataSrc,
+          error: 'timeout',
+          timeout_ms: CONFIG.IMAGE_LOADING_TIMEOUT_MS,
+        });
+      }, CONFIG.IMAGE_LOADING_TIMEOUT_MS);
 
       img.onload = function handleImageLoad() {
+        clearTimeout(timeoutId);
         imageElement.src = dataSrc;
         imageElement.classList.add('loaded');
         imageElement.removeAttribute('data-src');
+
+        PerformanceMonitor.mark(`image-load-end-${imageElement.className}`);
+        PerformanceMonitor.measure(
+          `image-load-${imageElement.className}`,
+          `image-load-start-${imageElement.className}`,
+          `image-load-end-${imageElement.className}`
+        );
 
         Analytics.trackEvent(ANALYTICS_EVENTS.BACKGROUND_LOADED, {
           src: dataSrc,
@@ -569,13 +764,23 @@
         });
 
         log('info', 'Background image loaded successfully', { src: dataSrc });
+        loadingImages.delete(imageElement);
       };
 
       img.onerror = function handleImageError() {
+        clearTimeout(timeoutId);
         log('error', 'Failed to load background image', { src: dataSrc });
         imageElement.classList.add('load-error');
+        
+        Analytics.trackEvent(ANALYTICS_EVENTS.IMAGE_LOAD_ERROR, {
+          src: dataSrc,
+          error: 'load_failed',
+        });
+        
+        loadingImages.delete(imageElement);
       };
 
+      loadingImages.set(imageElement, { img, timeoutId });
       img.src = dataSrc;
     }
 
@@ -637,8 +842,15 @@
       if (observer) {
         observer.disconnect();
         observer = null;
-        log('info', 'Lazy loader destroyed');
       }
+
+      // Clear any pending timeouts
+      loadingImages.forEach(({ timeoutId }) => {
+        clearTimeout(timeoutId);
+      });
+      loadingImages.clear();
+
+      log('info', 'Lazy loader destroyed');
     }
 
     return Object.freeze({
@@ -1436,6 +1648,7 @@
    */
   function initializeAll() {
     try {
+      PerformanceMonitor.mark('initialization-start');
       log('info', 'Initializing hero section modules');
 
       GoogleAnalytics.initialize();
@@ -1446,6 +1659,9 @@
       ProgramCards.initialize();
       ProgramsVisibilityTracking.initialize();
       ContactForm.initialize();
+
+      PerformanceMonitor.mark('initialization-end');
+      PerformanceMonitor.measure('total-initialization', 'initialization-start', 'initialization-end');
 
       log('info', 'Hero section initialization complete');
     } catch (error) {
@@ -1467,11 +1683,23 @@
   }
 
   // ============================================
+  // Page Load Performance Tracking
+  // ============================================
+
+  window.addEventListener('load', () => {
+    // Report performance metrics after page load
+    setTimeout(() => {
+      PerformanceMonitor.reportMetrics();
+    }, 0);
+  });
+
+  // ============================================
   // Cleanup on Page Unload
   // ============================================
 
   window.addEventListener('beforeunload', () => {
     LazyLoader.destroy();
+    PerformanceMonitor.reportMetrics();
     log('info', 'Hero section cleanup complete');
   });
 })();
