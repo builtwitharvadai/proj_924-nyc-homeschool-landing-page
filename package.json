@@ -16,7 +16,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{html,css,js,json,md}\"",
-    "serve": "live-server --port=8080 --open=index.html"
+    "serve": "live-server --port=8080 --open=index.html",
+    "a11y-test": "pa11y-ci --config .pa11yci.json",
+    "perf-test": "lighthouse http://localhost:8080 --output=html --output-path=./lighthouse-report.html --view"
   },
   "keywords": [
     "homeschool",
@@ -30,7 +32,9 @@
   "devDependencies": {
     "clean-css-cli": "^5.6.3",
     "eslint": "^8.57.0",
+    "lighthouse": "^11.4.0",
     "live-server": "^1.2.2",
+    "pa11y-ci": "^3.1.0",
     "prettier": "^3.1.1",
     "terser": "^5.27.0"
   }
