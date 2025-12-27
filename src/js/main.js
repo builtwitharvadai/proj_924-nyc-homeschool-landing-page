@@ -8,10 +8,11 @@
  * - Intersection Observer for performance optimization
  * - Program card interactions and keyboard navigation
  * - Contact form validation and submission handling
+ * - Google Analytics 4 integration
  * 
- * @generated-from: task-id:TASK-002, task-id:735be9ca-de2a-4d3e-8d57-44ce50f6d27b, task-id:1bc3bb18-5c9a-4a4b-b31a-06119fdfedfe
- * @modifies: hero-section interactions, programs-section interactions, contact-form interactions
- * @dependencies: []
+ * @generated-from: task-id:TASK-002, task-id:735be9ca-de2a-4d3e-8d57-44ce50f6d27b, task-id:1bc3bb18-5c9a-4a4b-b31a-06119fdfedfe, task-id:43be3d0b-2e41-4124-8e7c-dc7e35364c64
+ * @modifies: hero-section interactions, programs-section interactions, contact-form interactions, analytics tracking
+ * @dependencies: [Google Analytics 4]
  */
 
 (function initializeHeroSection() {
@@ -31,6 +32,7 @@
     PROGRAM_CARD_FOCUS_CLASS: 'program-card--focused',
     PROGRAM_CARD_ACTIVE_CLASS: 'program-card--active',
     FORM_SUBMIT_TIMEOUT_MS: 10000,
+    GA_MEASUREMENT_ID: 'G-XXXXXXXXXX',
   });
 
   const SELECTORS = Object.freeze({
@@ -59,6 +61,8 @@
     FORM_SUBMIT_SUCCESS: 'contact_form_submit_success',
     FORM_SUBMIT_ERROR: 'contact_form_submit_error',
     FORM_VALIDATION_ERROR: 'contact_form_validation_error',
+    PAGE_ENGAGEMENT: 'page_engagement',
+    SCROLL_DEPTH: 'scroll_depth',
   });
 
   const VALIDATION_PATTERNS = Object.freeze({
@@ -159,6 +163,225 @@
   }
 
   // ============================================
+  // Google Analytics 4 Module
+  // ============================================
+
+  const GoogleAnalytics = (function createGoogleAnalyticsModule() {
+    let isInitialized = false;
+    let sessionStartTime = Date.now();
+    let scrollDepthTracked = new Set();
+
+    /**
+     * Checks if Google Analytics is available
+     * @returns {boolean} True if GA is available
+     */
+    function isAvailable() {
+      return typeof window.gtag === 'function' && typeof window.dataLayer !== 'undefined';
+    }
+
+    /**
+     * Initializes Google Analytics 4
+     */
+    function initialize() {
+      if (isInitialized) {
+        log('warn', 'Google Analytics already initialized');
+        return;
+      }
+
+      if (!isAvailable()) {
+        log('warn', 'Google Analytics not available - gtag function not found');
+        return;
+      }
+
+      try {
+        // Set up enhanced measurement
+        window.gtag('config', CONFIG.GA_MEASUREMENT_ID, {
+          send_page_view: true,
+          page_title: document.title,
+          page_location: window.location.href,
+          page_path: window.location.pathname,
+        });
+
+        // Track session start
+        trackEvent('session_start', {
+          session_id: generateSessionId(),
+          engagement_time_msec: 0,
+        });
+
+        // Set up scroll depth tracking
+        initializeScrollDepthTracking();
+
+        // Set up engagement time tracking
+        initializeEngagementTracking();
+
+        isInitialized = true;
+        log('info', 'Google Analytics 4 initialized successfully');
+      } catch (error) {
+        log('error', 'Failed to initialize Google Analytics', {
+          error: error.message,
+        });
+      }
+    }
+
+    /**
+     * Generates a session ID
+     * @returns {string} Session ID
+     */
+    function generateSessionId() {
+      return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    }
+
+    /**
+     * Tracks a Google Analytics event
+     * @param {string} eventName - Event name
+     * @param {Object} eventParams - Event parameters
+     */
+    function trackEvent(eventName, eventParams = {}) {
+      if (!isAvailable()) {
+        log('warn', 'Cannot track event - Google Analytics not available', {
+          eventName,
+        });
+        return;
+      }
+
+      try {
+        const enrichedParams = {
+          ...eventParams,
+          timestamp: Date.now(),
+          page_location: window.location.href,
+          page_path: window.location.pathname,
+          page_title: document.title,
+        };
+
+        window.gtag('event', eventName, enrichedParams);
+
+        log('info', `GA4 event tracked: ${eventName}`, enrichedParams);
+      } catch (error) {
+        log('error', 'Failed to track GA4 event', {
+          eventName,
+          error: error.message,
+        });
+      }
+    }
+
+    /**
+     * Tracks conversion events
+     * @param {string} conversionName - Conversion name
+     * @param {Object} conversionData - Conversion data
+     */
+    function trackConversion(conversionName, conversionData = {}) {
+      trackEvent('conversion', {
+        conversion_name: conversionName,
+        ...conversionData,
+      });
+    }
+
+    /**
+     * Tracks user engagement
+     * @param {string} engagementType - Type of engagement
+     * @param {Object} engagementData - Engagement data
+     */
+    function trackEngagement(engagementType, engagementData = {}) {
+      const engagementTime = Date.now() - sessionStartTime;
+
+      trackEvent(ANALYTICS_EVENTS.PAGE_ENGAGEMENT, {
+        engagement_type: engagementType,
+        engagement_time_msec: engagementTime,
+        ...engagementData,
+      });
+    }
+
+    /**
+     * Initializes scroll depth tracking
+     */
+    function initializeScrollDepthTracking() {
+      const scrollDepths = [25, 50, 75, 90, 100];
+
+      const trackScrollDepth = debounce(() => {
+        const scrollPercentage = Math.round(
+          ((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight) * 100
+        );
+
+        scrollDepths.forEach((depth) => {
+          if (scrollPercentage >= depth && !scrollDepthTracked.has(depth)) {
+            scrollDepthTracked.add(depth);
+            trackEvent(ANALYTICS_EVENTS.SCROLL_DEPTH, {
+              scroll_depth: depth,
+              scroll_percentage: scrollPercentage,
+            });
+          }
+        });
+      }, 500);
+
+      window.addEventListener('scroll', trackScrollDepth, { passive: true });
+    }
+
+    /**
+     * Initializes engagement time tracking
+     */
+    function initializeEngagementTracking() {
+      let isEngaged = true;
+      let engagementStartTime = Date.now();
+
+      // Track visibility changes
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (isEngaged) {
+            const engagementDuration = Date.now() - engagementStartTime;
+            trackEngagement('visibility_hidden', {
+              engagement_duration_msec: engagementDuration,
+            });
+            isEngaged = false;
+          }
+        } else {
+          engagementStartTime = Date.now();
+          isEngaged = true;
+          trackEngagement('visibility_visible');
+        }
+      });
+
+      // Track before unload
+      window.addEventListener('beforeunload', () => {
+        if (isEngaged) {
+          const totalEngagementTime = Date.now() - sessionStartTime;
+          trackEngagement('session_end', {
+            total_engagement_time_msec: totalEngagementTime,
+          });
+        }
+      });
+    }
+
+    /**
+     * Sets user properties
+     * @param {Object} properties - User properties
+     */
+    function setUserProperties(properties) {
+      if (!isAvailable()) {
+        log('warn', 'Cannot set user properties - Google Analytics not available');
+        return;
+      }
+
+      try {
+        window.gtag('set', 'user_properties', properties);
+        log('info', 'User properties set', properties);
+      } catch (error) {
+        log('error', 'Failed to set user properties', {
+          error: error.message,
+        });
+      }
+    }
+
+    return Object.freeze({
+      initialize,
+      trackEvent,
+      trackConversion,
+      trackEngagement,
+      setUserProperties,
+      isAvailable,
+    });
+  })();
+
+  // ============================================
   // Analytics Module
   // ============================================
 
@@ -179,11 +402,10 @@
 
         log('info', `Analytics event tracked: ${eventName}`, payload);
 
-        // Integration point for analytics services (Google Analytics, Mixpanel, etc.)
-        if (typeof window.gtag === 'function') {
-          window.gtag('event', eventName, eventData);
-        }
+        // Track with Google Analytics 4
+        GoogleAnalytics.trackEvent(eventName, eventData);
 
+        // Legacy dataLayer push for backwards compatibility
         if (typeof window.dataLayer !== 'undefined' && Array.isArray(window.dataLayer)) {
           window.dataLayer.push(payload);
         }
@@ -1124,6 +1346,12 @@
           timestamp: Date.now(),
         });
 
+        // Track conversion
+        GoogleAnalytics.trackConversion('contact_form_submission', {
+          form_name: 'contact_form',
+          submission_method: 'web_form',
+        });
+
         log('info', 'Form submitted successfully');
 
         // Show success message
@@ -1210,6 +1438,7 @@
     try {
       log('info', 'Initializing hero section modules');
 
+      GoogleAnalytics.initialize();
       SmoothScroll.initialize();
       LazyLoader.initialize();
       CTATracking.initialize();
