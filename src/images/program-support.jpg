@@ -1,0 +1,1 @@
+convert input.jpg -resize 800x600^ -gravity center -extent 800x600 -quality 85 -strip src/images/program-support.jpg
