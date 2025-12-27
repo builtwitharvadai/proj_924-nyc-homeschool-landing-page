@@ -52,22 +52,23 @@
     </nav>
   </header>
   
-  <section class="hero-section">
+  <section class="hero-section" aria-labelledby="hero-headline">
     <img 
       src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect fill='%23003366' width='1920' height='1080'/%3E%3C/svg%3E"
       alt=""
       class="hero-background"
-      loading="lazy"
+      loading="eager"
       aria-hidden="true"
+      role="presentation"
     >
     <div class="hero-content">
-      <h1 class="hero-headline">
+      <h1 id="hero-headline" class="hero-headline">
         Empowering <span class="hero-headline-highlight">NYC Families</span> Through Personalized Homeschooling
       </h1>
       <p class="hero-description">
         Navigate New York City's unique homeschooling landscape with confidence. We provide expert guidance, community support, and resources tailored specifically for urban homeschooling families.
       </p>
-      <div class="hero-cta-group">
+      <div class="hero-cta-group" role="group" aria-label="Call to action buttons">
         <a href="#contact" class="hero-cta-button hero-cta-button--primary">
           Get Started Today
         </a>
@@ -75,21 +76,21 @@
           Explore Programs
         </a>
       </div>
-      <div class="hero-features">
-        <div class="hero-feature">
-          <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <div class="hero-features" role="list" aria-label="Key features">
+        <div class="hero-feature" role="listitem">
+          <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           <span>NYC Compliance Support</span>
         </div>
-        <div class="hero-feature">
-          <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <div class="hero-feature" role="listitem">
+          <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           <span>Local Community Network</span>
         </div>
-        <div class="hero-feature">
-          <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <div class="hero-feature" role="listitem">
+          <svg class="hero-feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           <span>Expert Educational Guidance</span>
@@ -261,28 +262,28 @@
             <h3>Contact Information</h3>
             
             <div class="contact-info-item">
-              <svg class="contact-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg class="contact-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
               <div>
                 <h4>Email</h4>
-                <a href="mailto:info@nychomeschool.org">info@nychomeschool.org</a>
+                <a href="mailto:info@nychomeschool.org" aria-label="Email us at info@nychomeschool.org">info@nychomeschool.org</a>
               </div>
             </div>
             
             <div class="contact-info-item">
-              <svg class="contact-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg class="contact-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
               </svg>
               <div>
                 <h4>Phone</h4>
-                <a href="tel:+12125551234">(212) 555-1234</a>
+                <a href="tel:+12125551234" aria-label="Call us at (212) 555-1234">(212) 555-1234</a>
               </div>
             </div>
             
             <div class="contact-info-item">
-              <svg class="contact-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg class="contact-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
@@ -296,7 +297,7 @@
             </div>
           </div>
           
-          <form class="contact-form" action="https://formsubmit.co/info@nychomeschool.org" method="POST" novalidate>
+          <form class="contact-form" action="https://formsubmit.co/info@nychomeschool.org" method="POST" novalidate aria-label="Contact form">
             <input type="hidden" name="_subject" value="New Contact Form Submission">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_template" value="table">
@@ -383,9 +384,6 @@
         </div>
       </div>
     </section>
-    
-    <h1>Welcome to NYC Homeschool</h1>
-    <p>Your journey starts here.</p>
   </main>
   
   <footer role="contentinfo">
