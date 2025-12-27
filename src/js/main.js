@@ -6,9 +6,10 @@
  * - Lazy loading for background images
  * - Analytics event tracking for button clicks
  * - Intersection Observer for performance optimization
+ * - Program card interactions and keyboard navigation
  * 
- * @generated-from: task-id:TASK-002
- * @modifies: hero-section interactions
+ * @generated-from: task-id:TASK-002, task-id:735be9ca-de2a-4d3e-8d57-44ce50f6d27b
+ * @modifies: hero-section interactions, programs-section interactions
  * @dependencies: []
  */
 
@@ -26,6 +27,8 @@
     ANALYTICS_DEBOUNCE_MS: 300,
     INTERSECTION_THRESHOLD: 0.1,
     ERROR_LOG_PREFIX: '[Hero Section]',
+    PROGRAM_CARD_FOCUS_CLASS: 'program-card--focused',
+    PROGRAM_CARD_ACTIVE_CLASS: 'program-card--active',
   });
 
   const SELECTORS = Object.freeze({
@@ -34,12 +37,18 @@
     CTA_BUTTONS: '.hero-cta-button',
     PRIMARY_CTA: '.hero-cta-button--primary',
     SECONDARY_CTA: '.hero-cta-button--secondary',
+    PROGRAM_CARDS: '.program-card',
+    PROGRAMS_SECTION: '.programs-section',
   });
 
   const ANALYTICS_EVENTS = Object.freeze({
     CTA_CLICK: 'hero_cta_click',
     HERO_VIEW: 'hero_section_view',
     BACKGROUND_LOADED: 'hero_background_loaded',
+    PROGRAM_CARD_CLICK: 'program_card_click',
+    PROGRAM_CARD_HOVER: 'program_card_hover',
+    PROGRAM_CARD_FOCUS: 'program_card_focus',
+    PROGRAMS_SECTION_VIEW: 'programs_section_view',
   });
 
   // ============================================
@@ -516,6 +525,254 @@
   })();
 
   // ============================================
+  // Program Cards Interaction Module
+  // ============================================
+
+  const ProgramCards = (function createProgramCardsModule() {
+    /**
+     * Extracts program card metadata
+     * @param {Element} card - Program card element
+     * @returns {Object} Card metadata
+     */
+    function getCardMetadata(card) {
+      const titleElement = card.querySelector('h3');
+      const descriptionElement = card.querySelector('.program-description');
+      
+      return {
+        title: titleElement ? titleElement.textContent.trim() : 'Unknown',
+        description: descriptionElement ? descriptionElement.textContent.trim().substring(0, 100) : '',
+        index: Array.from(card.parentElement.children).indexOf(card),
+      };
+    }
+
+    /**
+     * Handles program card click events
+     * @param {Event} event - Click event
+     */
+    function handleCardClick(event) {
+      const card = event.currentTarget;
+      const metadata = getCardMetadata(card);
+
+      card.classList.add(CONFIG.PROGRAM_CARD_ACTIVE_CLASS);
+      setTimeout(() => {
+        card.classList.remove(CONFIG.PROGRAM_CARD_ACTIVE_CLASS);
+      }, 200);
+
+      Analytics.trackEvent(ANALYTICS_EVENTS.PROGRAM_CARD_CLICK, {
+        ...metadata,
+        timestamp: Date.now(),
+      });
+
+      log('info', 'Program card clicked', metadata);
+    }
+
+    /**
+     * Handles program card hover events
+     * @param {Event} event - Mouse enter event
+     */
+    function handleCardHover(event) {
+      const card = event.currentTarget;
+      const metadata = getCardMetadata(card);
+
+      Analytics.trackEventDebounced(ANALYTICS_EVENTS.PROGRAM_CARD_HOVER, {
+        ...metadata,
+        timestamp: Date.now(),
+      });
+
+      log('info', 'Program card hovered', metadata);
+    }
+
+    /**
+     * Handles program card focus events
+     * @param {Event} event - Focus event
+     */
+    function handleCardFocus(event) {
+      const card = event.currentTarget;
+      const metadata = getCardMetadata(card);
+
+      card.classList.add(CONFIG.PROGRAM_CARD_FOCUS_CLASS);
+
+      Analytics.trackEvent(ANALYTICS_EVENTS.PROGRAM_CARD_FOCUS, {
+        ...metadata,
+        timestamp: Date.now(),
+      });
+
+      log('info', 'Program card focused', metadata);
+    }
+
+    /**
+     * Handles program card blur events
+     * @param {Event} event - Blur event
+     */
+    function handleCardBlur(event) {
+      const card = event.currentTarget;
+      card.classList.remove(CONFIG.PROGRAM_CARD_FOCUS_CLASS);
+    }
+
+    /**
+     * Handles keyboard navigation for program cards
+     * @param {Event} event - Keydown event
+     */
+    function handleCardKeydown(event) {
+      const card = event.currentTarget;
+      const cards = querySelectorAll(SELECTORS.PROGRAM_CARDS);
+      const currentIndex = cards.indexOf(card);
+
+      let targetIndex = -1;
+
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          event.preventDefault();
+          targetIndex = (currentIndex + 1) % cards.length;
+          break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          event.preventDefault();
+          targetIndex = (currentIndex - 1 + cards.length) % cards.length;
+          break;
+        case 'Home':
+          event.preventDefault();
+          targetIndex = 0;
+          break;
+        case 'End':
+          event.preventDefault();
+          targetIndex = cards.length - 1;
+          break;
+        case 'Enter':
+        case ' ':
+          event.preventDefault();
+          handleCardClick(event);
+          return;
+        default:
+          return;
+      }
+
+      if (targetIndex !== -1 && cards[targetIndex]) {
+        cards[targetIndex].focus();
+      }
+    }
+
+    /**
+     * Makes program cards keyboard accessible
+     * @param {Element} card - Program card element
+     */
+    function makeCardAccessible(card) {
+      if (!card.hasAttribute('tabindex')) {
+        card.setAttribute('tabindex', '0');
+      }
+
+      if (!card.hasAttribute('role')) {
+        card.setAttribute('role', 'button');
+      }
+
+      const titleElement = card.querySelector('h3');
+      if (titleElement && !card.hasAttribute('aria-label')) {
+        card.setAttribute('aria-label', `View details for ${titleElement.textContent.trim()}`);
+      }
+    }
+
+    /**
+     * Initializes program card interactions
+     */
+    function initialize() {
+      const programCards = querySelectorAll(SELECTORS.PROGRAM_CARDS);
+
+      if (programCards.length === 0) {
+        log('warn', 'No program cards found for interaction initialization');
+        return;
+      }
+
+      programCards.forEach((card) => {
+        makeCardAccessible(card);
+
+        card.addEventListener('click', handleCardClick);
+        card.addEventListener('mouseenter', handleCardHover);
+        card.addEventListener('focus', handleCardFocus);
+        card.addEventListener('blur', handleCardBlur);
+        card.addEventListener('keydown', handleCardKeydown);
+      });
+
+      log('info', `Program card interactions initialized for ${programCards.length} cards`);
+    }
+
+    return Object.freeze({
+      initialize,
+    });
+  })();
+
+  // ============================================
+  // Programs Section Visibility Tracking
+  // ============================================
+
+  const ProgramsVisibilityTracking = (function createProgramsVisibilityTrackingModule() {
+    let hasTrackedView = false;
+    let observer = null;
+
+    /**
+     * Handles programs section visibility
+     * @param {IntersectionObserverEntry[]} entries - Observed entries
+     */
+    function handleVisibility(entries) {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !hasTrackedView) {
+          hasTrackedView = true;
+
+          Analytics.trackEvent(ANALYTICS_EVENTS.PROGRAMS_SECTION_VIEW, {
+            timestamp: Date.now(),
+            viewportWidth: window.innerWidth,
+            viewportHeight: window.innerHeight,
+          });
+
+          log('info', 'Programs section viewed');
+
+          if (observer) {
+            observer.disconnect();
+          }
+        }
+      });
+    }
+
+    /**
+     * Initializes programs section visibility tracking
+     */
+    function initialize() {
+      const programsSection = querySelector(SELECTORS.PROGRAMS_SECTION);
+
+      if (!programsSection) {
+        log('warn', 'Programs section not found for visibility tracking');
+        return;
+      }
+
+      if (!('IntersectionObserver' in window)) {
+        log('warn', 'IntersectionObserver not supported for programs visibility tracking');
+        Analytics.trackEvent(ANALYTICS_EVENTS.PROGRAMS_SECTION_VIEW, {
+          timestamp: Date.now(),
+          fallback: true,
+        });
+        return;
+      }
+
+      try {
+        observer = new IntersectionObserver(handleVisibility, {
+          threshold: CONFIG.INTERSECTION_THRESHOLD,
+        });
+
+        observer.observe(programsSection);
+        log('info', 'Programs section visibility tracking initialized');
+      } catch (error) {
+        log('error', 'Failed to initialize programs visibility tracking', {
+          error: error.message,
+        });
+      }
+    }
+
+    return Object.freeze({
+      initialize,
+    });
+  })();
+
+  // ============================================
   // Main Initialization
   // ============================================
 
@@ -530,6 +787,8 @@
       LazyLoader.initialize();
       CTATracking.initialize();
       VisibilityTracking.initialize();
+      ProgramCards.initialize();
+      ProgramsVisibilityTracking.initialize();
 
       log('info', 'Hero section initialization complete');
     } catch (error) {
