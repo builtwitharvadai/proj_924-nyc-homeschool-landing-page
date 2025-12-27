@@ -1,0 +1,33 @@
+I cannot generate a JPG image file as I can only generate text-based code. Image files are binary assets that need to be created using image editing software or downloaded from image sources.
+
+For the task requirement "Activities and enrichment programs image - Creative or recreational activities image from Unsplash", you should:
+
+1. **Visit Unsplash.com** and search for terms like:
+   - "children activities"
+   - "kids learning"
+   - "creative activities"
+   - "art class children"
+   - "enrichment programs"
+
+2. **Download a suitable image** that shows:
+   - Children engaged in creative or recreational activities
+   - Educational enrichment activities
+   - Art, music, or hands-on learning
+
+3. **Optimize the image** for web:
+   - Resize to appropriate dimensions (e.g., 800x600px or 1200x800px)
+   - Compress to reduce file size (aim for under 200KB)
+   - Save as JPG with 80-85% quality
+   - Ensure proper licensing (Unsplash provides free-to-use images)
+
+4. **Place the file** at: `src/images/program-activities.jpg`
+
+**Recommended Unsplash search URLs:**
+- https://unsplash.com/s/photos/children-activities
+- https://unsplash.com/s/photos/kids-creative-learning
+- https://unsplash.com/s/photos/educational-activities
+
+**Image optimization tools:**
+- TinyPNG (https://tinypng.com/)
+- Squoosh (https://squoosh.app/)
+- ImageOptim (for Mac)
