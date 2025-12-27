@@ -1,0 +1,37 @@
+{
+  "name": "nyc-homeschool-landing-page",
+  "version": "1.0.0",
+  "description": "NYC Homeschool Landing Page - Static HTML/CSS/JavaScript website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "live-server --port=8080 --open=index.html",
+    "build": "npm run build:clean && npm run build:copy && npm run build:minify",
+    "build:clean": "rm -rf dist && mkdir -p dist",
+    "build:copy": "cp -r *.html css js assets dist/ 2>/dev/null || true",
+    "build:minify": "npm run build:minify:css && npm run build:minify:js",
+    "build:minify:css": "for file in dist/css/*.css; do [ -f \"$file\" ] && npx clean-css-cli -o \"$file\" \"$file\"; done",
+    "build:minify:js": "for file in dist/js/*.js; do [ -f \"$file\" ] && npx terser \"$file\" -o \"$file\" --compress --mangle; done",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{html,css,js,json,md}\"",
+    "serve": "live-server --port=8080 --open=index.html"
+  },
+  "keywords": [
+    "homeschool",
+    "nyc",
+    "education",
+    "landing-page",
+    "static-site"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "clean-css-cli": "^5.6.3",
+    "eslint": "^8.57.0",
+    "live-server": "^1.2.2",
+    "prettier": "^3.1.1",
+    "terser": "^5.27.0"
+  }
+}
