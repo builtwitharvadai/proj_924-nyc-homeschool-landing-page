@@ -440,6 +440,141 @@ h6 {
 }
 
 /* ============================================
+   About Section
+   ============================================ */
+
+.about-section {
+  position: relative;
+  display: grid;
+  grid-template-columns: 
+    [full-start] minmax(var(--container-padding), 1fr)
+    [content-start] min(var(--container-max-width), 100% - var(--container-padding) * 2)
+    [content-end] minmax(var(--container-padding), 1fr)
+    [full-end];
+  padding-block: var(--space-4xl);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.about-container {
+  grid-column: content;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xl);
+}
+
+.about-header {
+  text-align: center;
+  max-width: 65ch;
+  margin-inline: auto;
+}
+
+.about-header h2 {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.02em;
+  color: var(--color-primary-900);
+  margin-bottom: var(--space-md);
+  text-wrap: balance;
+}
+
+.about-subtitle {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+}
+
+.about-mission,
+.about-philosophy,
+.about-history,
+.about-benefits {
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-2xl);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.about-mission:hover,
+.about-philosophy:hover,
+.about-history:hover,
+.about-benefits:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.about-mission h3,
+.about-philosophy h3,
+.about-history h3,
+.about-benefits h3 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+  color: var(--color-primary-700);
+  margin-bottom: var(--space-sm);
+}
+
+.about-mission p,
+.about-philosophy p,
+.about-history p,
+.about-benefits p {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-primary);
+  text-wrap: pretty;
+}
+
+.about-mission p + p,
+.about-philosophy p + p,
+.about-history p + p,
+.about-benefits p + p {
+  margin-top: var(--space-md);
+}
+
+.about-philosophy ul,
+.about-benefits ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  padding-left: 0;
+  list-style: none;
+}
+
+.about-philosophy ul li,
+.about-benefits ul li {
+  position: relative;
+  padding-left: var(--space-xl);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-primary);
+}
+
+.about-philosophy ul li::before,
+.about-benefits ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 0.75em;
+  height: 0.75em;
+  background-color: var(--color-accent-500);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.about-philosophy ul li strong,
+.about-benefits ul li strong {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-700);
+}
+
+/* ============================================
    Responsive Breakpoints
    ============================================ */
 
@@ -466,11 +601,29 @@ h6 {
     padding: var(--space-lg) var(--space-2xl);
     font-size: var(--font-size-xl);
   }
+
+  .about-container {
+    gap: var(--space-4xl);
+  }
+
+  .about-mission,
+  .about-philosophy,
+  .about-history,
+  .about-benefits {
+    padding: var(--space-3xl);
+  }
 }
 
 @media (width >= 1024px) {
   .hero-content {
     max-width: 70%;
+  }
+
+  .about-philosophy ul,
+  .about-benefits ul {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
   }
 }
 
@@ -508,6 +661,26 @@ h6 {
   .hero-headline,
   .hero-description {
     animation: none;
+  }
+
+  .about-section {
+    padding-block: var(--space-xl);
+  }
+
+  .about-mission,
+  .about-philosophy,
+  .about-history,
+  .about-benefits {
+    box-shadow: none;
+    border: 1px solid var(--color-neutral-300);
+    page-break-inside: avoid;
+  }
+
+  .about-mission:hover,
+  .about-philosophy:hover,
+  .about-history:hover,
+  .about-benefits:hover {
+    transform: none;
   }
 }
 

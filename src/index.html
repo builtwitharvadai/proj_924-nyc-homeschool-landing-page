@@ -65,6 +65,55 @@
   </section>
   
   <main id="main" role="main">
+    <section class="about-section" aria-labelledby="about-title">
+      <div class="about-container">
+        <header class="about-header">
+          <h2 id="about-title">About NYC Homeschool</h2>
+          <p class="about-subtitle">Empowering families to create exceptional educational experiences in the heart of New York City</p>
+        </header>
+        
+        <article class="about-mission" aria-labelledby="mission-title">
+          <h3 id="mission-title">Our Mission</h3>
+          <p>We believe every child deserves an education tailored to their unique strengths, interests, and learning style. NYC Homeschool exists to empower families with the resources, guidance, and community support needed to create exceptional homeschooling experiences in America's most dynamic urban environment.</p>
+          <p>Our mission is to make homeschooling accessible, compliant, and enriching for all New York City families, regardless of their background or experience level.</p>
+        </article>
+        
+        <article class="about-philosophy" aria-labelledby="philosophy-title">
+          <h3 id="philosophy-title">Educational Philosophy</h3>
+          <p>We embrace a child-centered, flexible approach to education that honors each student's individual journey. Our philosophy combines:</p>
+          <ul role="list">
+            <li><strong>Personalized Learning:</strong> Tailoring curriculum and pace to match each child's developmental stage and interests</li>
+            <li><strong>Real-World Integration:</strong> Leveraging NYC's museums, cultural institutions, and diverse communities as living classrooms</li>
+            <li><strong>Academic Excellence:</strong> Maintaining rigorous standards while fostering creativity and critical thinking</li>
+            <li><strong>Social-Emotional Growth:</strong> Building confidence, independence, and strong interpersonal skills through community engagement</li>
+            <li><strong>Family Partnership:</strong> Supporting parents as primary educators while providing expert guidance and resources</li>
+          </ul>
+        </article>
+        
+        <article class="about-history" aria-labelledby="history-title">
+          <h3 id="history-title">Our Story</h3>
+          <p>Founded in 2015 by a group of experienced NYC homeschooling parents and educators, NYC Homeschool emerged from a simple need: comprehensive, city-specific support for urban homeschooling families. What began as informal meetups in Central Park has grown into a thriving organization serving hundreds of families across all five boroughs.</p>
+          <p>Over the years, we've built strong relationships with the NYC Department of Education, established partnerships with cultural institutions, and created a robust network of resources specifically designed for the unique challenges and opportunities of homeschooling in New York City.</p>
+          <p>Today, we're proud to be the leading resource for NYC homeschooling families, offering everything from compliance guidance to curriculum support, community events to college preparation assistance.</p>
+        </article>
+        
+        <article class="about-benefits" aria-labelledby="benefits-title">
+          <h3 id="benefits-title">NYC-Specific Benefits</h3>
+          <p>Homeschooling in New York City offers unique advantages that we help families maximize:</p>
+          <ul role="list">
+            <li><strong>Unparalleled Cultural Access:</strong> Free or discounted admission to world-class museums, theaters, and educational institutions</li>
+            <li><strong>Diverse Learning Environments:</strong> From botanical gardens to historic landmarks, the city is your classroom</li>
+            <li><strong>Rich Community Networks:</strong> Connect with homeschooling families from every background and neighborhood</li>
+            <li><strong>Expert Resources:</strong> Access to specialized tutors, enrichment programs, and educational consultants</li>
+            <li><strong>Public Transportation:</strong> Easy access to learning opportunities across all boroughs without needing a car</li>
+            <li><strong>Multilingual Environment:</strong> Natural immersion in languages and cultures from around the world</li>
+            <li><strong>Compliance Support:</strong> Navigate NYC-specific regulations with confidence through our expert guidance</li>
+            <li><strong>College Preparation:</strong> Proximity to top universities and specialized college counseling for homeschoolers</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+    
     <h1>Welcome to NYC Homeschool</h1>
     <p>Your journey starts here.</p>
   </main>
@@ -72,6 +121,32 @@
   <footer role="contentinfo">
     <p>&copy; 2024 NYC Homeschool. All rights reserved.</p>
   </footer>
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "NYC Homeschool",
+    "description": "Your trusted resource for homeschooling in New York City",
+    "url": "https://nychomeschool.org",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "New York",
+      "addressRegion": "NY",
+      "addressCountry": "US"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": "New York City"
+    },
+    "foundingDate": "2015",
+    "sameAs": [
+      "https://facebook.com/nychomeschool",
+      "https://twitter.com/nychomeschool",
+      "https://instagram.com/nychomeschool"
+    ]
+  }
+  </script>
   
   <script src="/js/main.js" defer></script>
 </body>
