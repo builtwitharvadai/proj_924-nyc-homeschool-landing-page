@@ -7,9 +7,10 @@
  * - Analytics event tracking for button clicks
  * - Intersection Observer for performance optimization
  * - Program card interactions and keyboard navigation
+ * - Contact form validation and submission handling
  * 
- * @generated-from: task-id:TASK-002, task-id:735be9ca-de2a-4d3e-8d57-44ce50f6d27b
- * @modifies: hero-section interactions, programs-section interactions
+ * @generated-from: task-id:TASK-002, task-id:735be9ca-de2a-4d3e-8d57-44ce50f6d27b, task-id:1bc3bb18-5c9a-4a4b-b31a-06119fdfedfe
+ * @modifies: hero-section interactions, programs-section interactions, contact-form interactions
  * @dependencies: []
  */
 
@@ -29,6 +30,7 @@
     ERROR_LOG_PREFIX: '[Hero Section]',
     PROGRAM_CARD_FOCUS_CLASS: 'program-card--focused',
     PROGRAM_CARD_ACTIVE_CLASS: 'program-card--active',
+    FORM_SUBMIT_TIMEOUT_MS: 10000,
   });
 
   const SELECTORS = Object.freeze({
@@ -39,6 +41,10 @@
     SECONDARY_CTA: '.hero-cta-button--secondary',
     PROGRAM_CARDS: '.program-card',
     PROGRAMS_SECTION: '.programs-section',
+    CONTACT_FORM: '.contact-form',
+    FORM_GROUPS: '.form-group',
+    FORM_SUBMIT_BUTTON: '.form-submit-button',
+    FORM_ERROR: '.form-error',
   });
 
   const ANALYTICS_EVENTS = Object.freeze({
@@ -49,6 +55,26 @@
     PROGRAM_CARD_HOVER: 'program_card_hover',
     PROGRAM_CARD_FOCUS: 'program_card_focus',
     PROGRAMS_SECTION_VIEW: 'programs_section_view',
+    FORM_SUBMIT_START: 'contact_form_submit_start',
+    FORM_SUBMIT_SUCCESS: 'contact_form_submit_success',
+    FORM_SUBMIT_ERROR: 'contact_form_submit_error',
+    FORM_VALIDATION_ERROR: 'contact_form_validation_error',
+  });
+
+  const VALIDATION_PATTERNS = Object.freeze({
+    EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    PHONE: /^[\d\s\-+()]+$/,
+    NAME: /^[a-zA-Z\s'-]{2,}$/,
+  });
+
+  const ERROR_MESSAGES = Object.freeze({
+    REQUIRED: 'This field is required',
+    INVALID_EMAIL: 'Please enter a valid email address',
+    INVALID_PHONE: 'Please enter a valid phone number',
+    INVALID_NAME: 'Please enter a valid name (at least 2 characters)',
+    MESSAGE_TOO_SHORT: 'Message must be at least 10 characters',
+    SUBMISSION_FAILED: 'Failed to send message. Please try again.',
+    NETWORK_ERROR: 'Network error. Please check your connection and try again.',
   });
 
   // ============================================
@@ -773,6 +799,407 @@
   })();
 
   // ============================================
+  // Contact Form Validation Module
+  // ============================================
+
+  const ContactFormValidation = (function createContactFormValidationModule() {
+    /**
+     * Validates a single form field
+     * @param {HTMLInputElement|HTMLTextAreaElement} field - Form field to validate
+     * @returns {Object} Validation result with isValid and errorMessage
+     */
+    function validateField(field) {
+      const value = field.value.trim();
+      const fieldName = field.name;
+      const isRequired = field.hasAttribute('required');
+
+      // Check required fields
+      if (isRequired && !value) {
+        return {
+          isValid: false,
+          errorMessage: ERROR_MESSAGES.REQUIRED,
+        };
+      }
+
+      // Skip validation for optional empty fields
+      if (!isRequired && !value) {
+        return { isValid: true, errorMessage: '' };
+      }
+
+      // Field-specific validation
+      switch (fieldName) {
+        case 'name':
+          if (!VALIDATION_PATTERNS.NAME.test(value)) {
+            return {
+              isValid: false,
+              errorMessage: ERROR_MESSAGES.INVALID_NAME,
+            };
+          }
+          break;
+
+        case 'email':
+          if (!VALIDATION_PATTERNS.EMAIL.test(value)) {
+            return {
+              isValid: false,
+              errorMessage: ERROR_MESSAGES.INVALID_EMAIL,
+            };
+          }
+          break;
+
+        case 'phone':
+          if (value && !VALIDATION_PATTERNS.PHONE.test(value)) {
+            return {
+              isValid: false,
+              errorMessage: ERROR_MESSAGES.INVALID_PHONE,
+            };
+          }
+          break;
+
+        case 'message':
+          if (value.length < 10) {
+            return {
+              isValid: false,
+              errorMessage: ERROR_MESSAGES.MESSAGE_TOO_SHORT,
+            };
+          }
+          break;
+
+        default:
+          break;
+      }
+
+      return { isValid: true, errorMessage: '' };
+    }
+
+    /**
+     * Displays validation error for a field
+     * @param {HTMLInputElement|HTMLTextAreaElement} field - Form field
+     * @param {string} errorMessage - Error message to display
+     */
+    function showFieldError(field, errorMessage) {
+      const formGroup = field.closest(SELECTORS.FORM_GROUPS);
+      if (!formGroup) return;
+
+      const errorElement = formGroup.querySelector(SELECTORS.FORM_ERROR);
+      if (!errorElement) return;
+
+      field.setAttribute('aria-invalid', 'true');
+      errorElement.textContent = errorMessage;
+      errorElement.style.display = 'block';
+    }
+
+    /**
+     * Clears validation error for a field
+     * @param {HTMLInputElement|HTMLTextAreaElement} field - Form field
+     */
+    function clearFieldError(field) {
+      const formGroup = field.closest(SELECTORS.FORM_GROUPS);
+      if (!formGroup) return;
+
+      const errorElement = formGroup.querySelector(SELECTORS.FORM_ERROR);
+      if (!errorElement) return;
+
+      field.setAttribute('aria-invalid', 'false');
+      errorElement.textContent = '';
+      errorElement.style.display = 'none';
+    }
+
+    /**
+     * Validates all form fields
+     * @param {HTMLFormElement} form - Form element
+     * @returns {boolean} True if all fields are valid
+     */
+    function validateForm(form) {
+      const fields = Array.from(form.elements).filter(
+        (element) => element.tagName === 'INPUT' || element.tagName === 'TEXTAREA'
+      );
+
+      let isFormValid = true;
+      const errors = [];
+
+      fields.forEach((field) => {
+        const { isValid, errorMessage } = validateField(field);
+
+        if (!isValid) {
+          isFormValid = false;
+          showFieldError(field, errorMessage);
+          errors.push({
+            field: field.name,
+            error: errorMessage,
+          });
+        } else {
+          clearFieldError(field);
+        }
+      });
+
+      if (!isFormValid) {
+        Analytics.trackEvent(ANALYTICS_EVENTS.FORM_VALIDATION_ERROR, {
+          errors,
+          timestamp: Date.now(),
+        });
+
+        log('warn', 'Form validation failed', { errors });
+      }
+
+      return isFormValid;
+    }
+
+    /**
+     * Handles real-time field validation
+     * @param {Event} event - Input or blur event
+     */
+    function handleFieldValidation(event) {
+      const field = event.target;
+      const { isValid, errorMessage } = validateField(field);
+
+      if (!isValid) {
+        showFieldError(field, errorMessage);
+      } else {
+        clearFieldError(field);
+      }
+    }
+
+    return Object.freeze({
+      validateForm,
+      handleFieldValidation,
+      clearFieldError,
+    });
+  })();
+
+  // ============================================
+  // Contact Form Submission Module
+  // ============================================
+
+  const ContactFormSubmission = (function createContactFormSubmissionModule() {
+    /**
+     * Sets form loading state
+     * @param {HTMLFormElement} form - Form element
+     * @param {boolean} isLoading - Loading state
+     */
+    function setFormLoadingState(form, isLoading) {
+      const submitButton = form.querySelector(SELECTORS.FORM_SUBMIT_BUTTON);
+      if (!submitButton) return;
+
+      submitButton.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+      submitButton.disabled = isLoading;
+
+      const formInputs = form.querySelectorAll('input, textarea');
+      formInputs.forEach((input) => {
+        input.disabled = isLoading;
+      });
+    }
+
+    /**
+     * Shows success message
+     * @param {HTMLFormElement} form - Form element
+     */
+    function showSuccessMessage(form) {
+      const successMessage = document.createElement('div');
+      successMessage.className = 'form-success-message';
+      successMessage.setAttribute('role', 'alert');
+      successMessage.setAttribute('aria-live', 'polite');
+      successMessage.textContent = 'Thank you! Your message has been sent successfully. We\'ll get back to you soon.';
+      successMessage.style.cssText = `
+        padding: var(--space-md);
+        margin-top: var(--space-lg);
+        background-color: var(--color-success-50);
+        color: var(--color-success-700);
+        border: 2px solid var(--color-success-500);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-base);
+        font-weight: var(--font-weight-medium);
+      `;
+
+      form.appendChild(successMessage);
+
+      setTimeout(() => {
+        successMessage.remove();
+      }, 10000);
+    }
+
+    /**
+     * Shows error message
+     * @param {HTMLFormElement} form - Form element
+     * @param {string} message - Error message
+     */
+    function showErrorMessage(form, message) {
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'form-error-message';
+      errorMessage.setAttribute('role', 'alert');
+      errorMessage.setAttribute('aria-live', 'assertive');
+      errorMessage.textContent = message;
+      errorMessage.style.cssText = `
+        padding: var(--space-md);
+        margin-top: var(--space-lg);
+        background-color: var(--color-error-50);
+        color: var(--color-error-700);
+        border: 2px solid var(--color-error-500);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-base);
+        font-weight: var(--font-weight-medium);
+      `;
+
+      form.appendChild(errorMessage);
+
+      setTimeout(() => {
+        errorMessage.remove();
+      }, 10000);
+    }
+
+    /**
+     * Submits form data
+     * @param {HTMLFormElement} form - Form element
+     * @returns {Promise<boolean>} Success status
+     */
+    async function submitForm(form) {
+      const formData = new FormData(form);
+      const action = form.getAttribute('action');
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FORM_SUBMIT_TIMEOUT_MS);
+
+        const response = await fetch(action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json',
+          },
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return true;
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout');
+        }
+        throw error;
+      }
+    }
+
+    /**
+     * Handles form submission
+     * @param {Event} event - Submit event
+     */
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+
+      const form = event.target;
+
+      // Remove any existing messages
+      const existingMessages = form.querySelectorAll('.form-success-message, .form-error-message');
+      existingMessages.forEach((msg) => msg.remove());
+
+      // Validate form
+      if (!ContactFormValidation.validateForm(form)) {
+        const firstInvalidField = form.querySelector('[aria-invalid="true"]');
+        if (firstInvalidField) {
+          firstInvalidField.focus();
+        }
+        return;
+      }
+
+      // Track submission start
+      Analytics.trackEvent(ANALYTICS_EVENTS.FORM_SUBMIT_START, {
+        timestamp: Date.now(),
+      });
+
+      log('info', 'Form submission started');
+
+      // Set loading state
+      setFormLoadingState(form, true);
+
+      try {
+        // Submit form
+        await submitForm(form);
+
+        // Track success
+        Analytics.trackEvent(ANALYTICS_EVENTS.FORM_SUBMIT_SUCCESS, {
+          timestamp: Date.now(),
+        });
+
+        log('info', 'Form submitted successfully');
+
+        // Show success message
+        showSuccessMessage(form);
+
+        // Reset form
+        form.reset();
+
+        // Clear any validation errors
+        const fields = form.querySelectorAll('input, textarea');
+        fields.forEach((field) => {
+          ContactFormValidation.clearFieldError(field);
+        });
+      } catch (error) {
+        // Track error
+        Analytics.trackEvent(ANALYTICS_EVENTS.FORM_SUBMIT_ERROR, {
+          error: error.message,
+          timestamp: Date.now(),
+        });
+
+        log('error', 'Form submission failed', {
+          error: error.message,
+        });
+
+        // Show error message
+        const errorMessage = error.message.includes('timeout')
+          ? ERROR_MESSAGES.NETWORK_ERROR
+          : ERROR_MESSAGES.SUBMISSION_FAILED;
+
+        showErrorMessage(form, errorMessage);
+      } finally {
+        // Reset loading state
+        setFormLoadingState(form, false);
+      }
+    }
+
+    return Object.freeze({
+      handleFormSubmit,
+    });
+  })();
+
+  // ============================================
+  // Contact Form Module
+  // ============================================
+
+  const ContactForm = (function createContactFormModule() {
+    /**
+     * Initializes contact form validation and submission
+     */
+    function initialize() {
+      const form = querySelector(SELECTORS.CONTACT_FORM);
+
+      if (!form) {
+        log('warn', 'Contact form not found');
+        return;
+      }
+
+      // Attach submit handler
+      form.addEventListener('submit', ContactFormSubmission.handleFormSubmit);
+
+      // Attach real-time validation handlers
+      const fields = form.querySelectorAll('input, textarea');
+      fields.forEach((field) => {
+        field.addEventListener('blur', ContactFormValidation.handleFieldValidation);
+        field.addEventListener('input', debounce(ContactFormValidation.handleFieldValidation, 500));
+      });
+
+      log('info', 'Contact form initialized');
+    }
+
+    return Object.freeze({
+      initialize,
+    });
+  })();
+
+  // ============================================
   // Main Initialization
   // ============================================
 
@@ -789,6 +1216,7 @@
       VisibilityTracking.initialize();
       ProgramCards.initialize();
       ProgramsVisibilityTracking.initialize();
+      ContactForm.initialize();
 
       log('info', 'Hero section initialization complete');
     } catch (error) {
